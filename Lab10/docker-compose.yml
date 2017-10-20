@@ -1,0 +1,53 @@
+version: '2'
+services:
+    server:
+        restart: always
+        build: 
+            context: ./server/
+        container_name: servidor
+        environment:
+            - ZMQ_BIND_ADDRESS_HI=tcp://*:9000
+            - ZMQ_BIND_ADDRESS_SWEETIE=tcp://*:9100
+            - REDIS_PORT=6379
+            - REDIS_HOST=redis
+        depends_on:
+            - redis
+        links: 
+            - redis
+
+    redis:
+        restart: always
+        image: redis:alpine
+        container_name: redis
+        ports: 
+            - "6379:6379"
+        
+    client1:
+        build: 
+            context: ./client1/
+        container_name: cliente1
+        environment:
+            - ZMQ_PUB_ADDRESS_HI=tcp://servidor:9000
+            - REDIS_PORT=6379
+            - REDIS_HOST=redis
+        depends_on: 
+            - redis
+            - server
+        links: 
+            - redis
+
+    client2:
+        build:
+            context: ./client2/
+        container_name: cliente2
+        environment: 
+            - ZMQ_PUB_ADDRESS_SWEETIE=tcp://servidor:9100
+            - REDIS_PORT=6379
+            - REDIS_HOST=redis
+        depends_on: 
+            - redis
+            - server
+        links: 
+            - redis
+        
+    
